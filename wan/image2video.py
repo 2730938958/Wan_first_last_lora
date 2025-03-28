@@ -133,11 +133,12 @@ class WanI2V:
                  frame_num=81,
                  shift=5.0,
                  sample_solver='unipc',
-                 sampling_steps=40,
+                 sampling_steps=50,
                  guide_scale=5.0,
                  n_prompt="",
                  seed=-1,
-                 offload_model=True):
+                 offload_model=True,
+                 img2=None):
         r"""
         Generates video frames from input image and text prompt using diffusion process.
 
@@ -175,7 +176,8 @@ class WanI2V:
                 - W: Frame width from max_area)
         """
         img = TF.to_tensor(img).sub_(0.5).div_(0.5).to(self.device)
-
+        if img2 is not None:
+            img2 = TF.to_tensor(img2).sub_(0.5).div_(0.5).to(self.device)
         F = frame_num
         h, w = img.shape[1:]
         aspect_ratio = h / w
@@ -210,6 +212,7 @@ class WanI2V:
             torch.repeat_interleave(msk[:, 0:1], repeats=4, dim=1), msk[:, 1:]
         ],
                            dim=1)
+        msk[:, -2:-1] = 1
         msk = msk.view(1, msk.shape[1] // 4, 4, lat_h, lat_w)
         msk = msk.transpose(1, 2)[0]
 
@@ -239,10 +242,18 @@ class WanI2V:
                 torch.nn.functional.interpolate(
                     img[None].cpu(), size=(h, w), mode='bicubic').transpose(
                         0, 1),
-                torch.zeros(3, 80, h, w)
+                torch.zeros(3, 78, h, w),
+                torch.nn.functional.interpolate(
+                    img2[None].cpu(), size=(h, w), mode='bicubic').transpose(
+                    0, 1),
+                torch.zeros(3, 1, h, w),
             ],
                          dim=1).to(self.device)
         ])[0]
+
+        # self.rank == 0
+        # return self.vae.decode(y)[0]
+
         y = torch.concat([msk, y])
 
         @contextmanager

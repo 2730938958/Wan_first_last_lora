@@ -354,14 +354,23 @@ class QwenPromptExpander(PromptExpander):
                 device_map="cpu")
         else:
             from transformers import AutoModelForCausalLM, AutoTokenizer
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.model_name,
-                torch_dtype=torch.float16
-                if "AWQ" in self.model_name else "auto",
-                attn_implementation="flash_attention_2"
-                if FLASH_VER == 2 else None,
-                device_map="cpu")
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+            from transformers import Qwen2_5_VLForConditionalGeneration
+            model_dir = "/workspace/nas-data/Wan2.1/Qwen/Qwen2.5-VL-7B-Instruct"
+            self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+                model_dir,
+                torch_dtype=torch.bfloat16,  # 使用 bfloat16 节省内存
+                device_map="auto"  # 自动分配到可用设备
+            )
+            self.tokenizer = AutoTokenizer.from_pretrained(model_dir)
+
+            # self.model = AutoModelForCausalLM.from_pretrained(
+            #     self.model_name,
+            #     torch_dtype=torch.float16
+            #     if "AWQ" in self.model_name else "auto",
+            #     attn_implementation="flash_attention_2"
+            #     if FLASH_VER == 2 else None,
+            #     device_map="cpu")
+            # self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
     def extend(self, prompt, system_prompt, seed=-1, *args, **kwargs):
         self.model = self.model.to(self.device)

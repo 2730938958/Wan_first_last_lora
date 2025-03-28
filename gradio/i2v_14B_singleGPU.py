@@ -2,16 +2,16 @@
 import argparse
 import gc
 import os.path as osp
-import os
+import pdb
 import sys
 import warnings
 
 import gradio as gr
-
+import pdb
 warnings.filterwarnings('ignore')
 
 # Model
-sys.path.insert(0, os.path.sep.join(osp.realpath(__file__).split(os.path.sep)[:-2]))
+sys.path.insert(0, '/'.join(osp.realpath(__file__).split('/')[:-2]))
 import wan
 from wan.configs import MAX_AREA_CONFIGS, WAN_CONFIGS
 from wan.utils.prompt_extend import DashScopePromptExpander, QwenPromptExpander
@@ -283,4 +283,4 @@ if __name__ == '__main__':
     print("done", flush=True)
 
     demo = gradio_interface()
-    demo.launch(server_name="0.0.0.0", share=False, server_port=7860)
+    demo.launch(server_name="0.0.0.0", share=False, server_port=7850)

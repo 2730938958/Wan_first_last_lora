@@ -44,7 +44,7 @@ def _validate_args(args):
 
     # The default sampling steps are 40 for image-to-video tasks and 50 for text-to-video tasks.
     if args.sample_steps is None:
-        args.sample_steps = 40 if "i2v" in args.task else 50
+        args.sample_steps = 50 if "i2v" in args.task else 50 #50
 
     if args.sample_shift is None:
         args.sample_shift = 5.0
@@ -161,10 +161,15 @@ def _parse_args():
     parser.add_argument(
         "--base_seed",
         type=int,
-        default=-1,
+        default=3407,
         help="The seed to use for generating the image or video.")
     parser.add_argument(
         "--image",
+        type=str,
+        default=None,
+        help="The image to generate the video from.")
+    parser.add_argument(
+        "--image2",
         type=str,
         default=None,
         help="The image to generate the video from.")
@@ -330,6 +335,7 @@ def generate(args):
         logging.info(f"Input image: {args.image}")
 
         img = Image.open(args.image).convert("RGB")
+        img2 = Image.open(args.image2).convert("RGB")
         if args.use_prompt_extend:
             logging.info("Extending prompt ...")
             if rank == 0:
@@ -376,7 +382,8 @@ def generate(args):
             sampling_steps=args.sample_steps,
             guide_scale=args.sample_guide_scale,
             seed=args.base_seed,
-            offload_model=args.offload_model)
+            offload_model=args.offload_model,
+            img2=img2)
 
     if rank == 0:
         if args.save_file is None:

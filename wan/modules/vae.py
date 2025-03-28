@@ -318,7 +318,7 @@ class Encoder3d(nn.Module):
     def forward(self, x, feat_cache=None, feat_idx=[0]):
         if feat_cache is not None:
             idx = feat_idx[0]
-            cache_x = x[:, :, -CACHE_T:, :, :].clone()
+            cache_x = x[:, :, -CACHE_T:, :, :].clone() # 1,3,1
             if cache_x.shape[2] < 2 and feat_cache[idx] is not None:
                 # cache last frame of last two chunk
                 cache_x = torch.cat([
@@ -517,7 +517,8 @@ class WanVAE_(nn.Module):
         self.clear_cache()
         ## cache
         t = x.shape[2]
-        iter_ = 1 + (t - 1) // 4
+        # iter_ = 1 + (t - 1) // 4
+        iter_ = 21
         ## 对encode输入的x，按时间拆分为1、4、4、4....
         for i in range(iter_):
             self._enc_conv_idx = [0]
@@ -532,6 +533,13 @@ class WanVAE_(nn.Module):
                     feat_cache=self._enc_feat_map,
                     feat_idx=self._enc_conv_idx)
                 out = torch.cat([out, out_], 2)
+            # elif i == 20:
+            #     self._enc_feat_map = [None] * self._enc_conv_num
+            #     out_ = self.encoder(
+            #         x[:, :, -1:, :, :],
+            #         feat_cache=self._enc_feat_map,
+            #         feat_idx=self._enc_conv_idx)
+            #     out = torch.cat([out, out_], 2)
         mu, log_var = self.conv1(out).chunk(2, dim=1)
         if isinstance(scale[0], torch.Tensor):
             mu = (mu - scale[0].view(1, self.z_dim, 1, 1, 1)) * scale[1].view(

@@ -8,7 +8,7 @@ import sys
 import types
 from contextlib import contextmanager
 from functools import partial
-
+import pdb
 import torch
 import torch.cuda.amp as amp
 import torch.distributed as dist
@@ -84,7 +84,7 @@ class WanT2V:
         self.model = WanModel.from_pretrained(checkpoint_dir)
         self.model.eval().requires_grad_(False)
 
-        if use_usp:
+        if use_usp: # Unified Sequence Parallelism
             from xfuser.core.distributed import \
                 get_sequence_parallel_world_size
 
@@ -152,10 +152,10 @@ class WanT2V:
                 - W: Frame width from size)
         """
         # preprocess
-        F = frame_num
+        F = frame_num # 81帧
         target_shape = (self.vae.model.z_dim, (F - 1) // self.vae_stride[0] + 1,
                         size[1] // self.vae_stride[1],
-                        size[0] // self.vae_stride[2])
+                        size[0] // self.vae_stride[2]) # 16, 21, 60, 104
 
         seq_len = math.ceil((target_shape[2] * target_shape[3]) /
                             (self.patch_size[1] * self.patch_size[2]) *
