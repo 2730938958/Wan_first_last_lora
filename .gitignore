@@ -1,4 +1,5 @@
 .*
+!DiffSynth-Studio/
 *.py[cod]
 # *.jpg
 *.jpeg
